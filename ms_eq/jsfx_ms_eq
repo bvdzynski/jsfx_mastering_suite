@@ -1,0 +1,236 @@
+//#####-INFO-##########################################################################################################
+//author: Maciej Budzowski
+//plugin behavior based on "Biquad Filter Coefficients" method (Bristow-Johnson, 2004)
+//filter functions were derived from analog prototypes and had been digitized using the Bilinear Transform (BLT)
+//
+//sources:
+//  books:
+//    - "Designing Audio Effect Plugins in C++ For AAX, AU, and VST3 with DSP Theory" by Will C. Pirkle (chapter 11.3, page 268)
+//    - "Hack Audio: An Introduction to Computer Programming and Digital Signal Processing in MATLAB" by Eric Tarr (chapter 13.3.2, page 244)
+//  sites:
+//    - https://shepazu.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
+//#####################################################################################################################
+
+desc:MASTERING_SUITE - 16-BAND GRAPHIC EQ + HPF/LPF (JSFX)
+
+//#####-SETUP-#########################################################################################################
+//import ui library
+import ../jsfx-ui-lib/ui-lib.jsfx-inc
+import ../jsfx-ui-lib/ui-lib-compat.jsfx-inc
+import jsfx_ms_eq_ui.jsfx-inc
+
+//in/out setup
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output
+
+//effect parameters controls
+//equalizer
+slider1:0<-12,12,0.1>-20.0 Hz (dB)
+slider2:0<-12,12,0.1>-31.7 Hz (dB)
+slider3:0<-12,12,0.1>-50.2 Hz (dB)
+slider4:0<-12,12,0.1>-79.6 Hz (dB)
+slider5:0<-12,12,0.1>-126.0 Hz (dB)
+slider6:0<-12,12,0.1>-200.0 Hz (dB)
+slider7:0<-12,12,0.1>-317.0 Hz (dB)
+slider8:0<-12,12,0.1>-502.0 Hz (dB)
+slider9:0<-12,12,0.1>-796.0 Hz (dB)
+slider10:0<-12,12,0.1>-1.26 kHz (dB)
+slider11:0<-12,12,0.1>-2.00 kHz (dB)
+slider12:0<-12,12,0.1>-3.17 kHz (dB)
+slider13:0<-12,12,0.1>-5.02 kHz (dB)
+slider14:0<-12,12,0.1>-7.96 kHz (dB)
+slider15:0<-12,12,0.1>-12.6 kHz (dB)
+slider16:0<-12,12,0.1>-20.0 kHz (dB)
+
+//high-pass filter
+slider17:0<0,10,1{0,12,18,24,30,36,43,54,60,80,100}>-High-Pass Filter (Hz)
+
+//low-pass filter
+slider18:0<0,8,1{0,40000,28000,21000,16000,12600,11100,9000,7500}>-Low-Pass Filter (Hz)
+
+//make-up gain
+slider19:0<-24,24,0.5>-Make-Up Gain (dB)
+
+//switches for sections
+slider20:equalizerActive=1<0,1,1{Disabled,Enabled}>-Equalizer section active (on/off)
+slider21:filtersActive=1<0,1,1{Disabled,Enabled}>-HPF/LPF section active (on/off)
+//#####################################################################################################################
+
+//#####-INIT-##########################################################################################################
+@init
+//#####-FUNCTIONS-#####################################################################################################
+function calculateBLTCoefficients(gain, freq, q, type) local(A, w0, alpha) (
+  //calculate coefficients for "peakingEQ" filter type
+  type == 1 ? (
+    A = 10^(gain/40);
+    w0 = 2 * $pi * (freq / srate);
+    alpha = sin(w0) / (2 * q);
+  
+    this.b0 = 1 + (alpha * A);
+    this.b1 = -2 * cos(w0);
+    this.b2 = 1 - (alpha * A);
+    this.a0 = 1 + (alpha / A);
+    this.a1 = -2 * cos(w0);
+    this.a2 = 1 - (alpha / A);
+  );
+  //calculate coefficients for "HPF" filter type
+  type == 2 ? (
+    w0 = 2 * $pi * (freq / srate);
+    alpha = sin(w0) / (2 * q);
+    
+    this.b0 = (1 + cos(w0))/2;
+    this.b1 = - (1 + cos(w0));
+    this.b2 = (1 + cos(w0))/2;
+    this.a0 = 1 + alpha;
+    this.a1 = -2 * cos(w0);
+    this.a2 = 1 - alpha;
+  );
+  //calculate coefficients for "LPF" filter type
+  type == 3 ? (
+    w0 = 2 * $pi * (freq / srate);
+    alpha = sin(w0) / (2 * q);
+    
+    this.b0 = (1 - cos(w0))/2;
+    this.b1 = 1 - cos(w0);
+    this.b2 = (1 - cos(w0))/2;
+    this.a0 = 1 + alpha;
+    this.a1 = -2 * cos(w0);
+    this.a2 = 1 - alpha;
+  );
+);
+
+function applyBilinearTransformFunctionOnSample() local(orgL, orgR) (
+  orgL = spl0;
+  spl0 = (this.b0/this.a0) * spl0 + (this.b1/this.a0) * this.XL1 + (this.b2/this.a0) * this.XL2 - (this.a1/this.a0) * this.YL1 - (this.a2/this.a0) * this.YL2;
+  this.XL2 = this.XL1;
+  this.XL1 = orgL;
+  this.YL2 = this.YL1;
+  this.YL1 = spl0;
+  
+  orgR = spl1;
+  spl1 = (this.b0/this.a0) * spl1 + (this.b1/this.a0) * this.XR1 + (this.b2/this.a0) * this.XR2 - (this.a1/this.a0) * this.YR1 - (this.a2/this.a0) * this.YR2;
+  this.XR2 = this.XR1;
+  this.XR1 = orgR;
+  this.YR2 = this.YR1;
+  this.YR1 = spl1;
+);
+
+function onSliderChange() (
+  //actions performed on every change of any slider (data update)
+  toUpdate = 0;
+
+  //assign controls values to variables
+
+  //#####-16-BAND-EQUALIZER-###############################
+  //for each slider recalculate coefficients for frequency
+  s1.calculateBLTCoefficients(slider1, 20.0, 0.85, 1);
+  s2.calculateBLTCoefficients(slider2, 31.7, 1, 1);
+  s3.calculateBLTCoefficients(slider3, 50.2, 0.1, 1);
+  s4.calculateBLTCoefficients(slider4, 79.6, 0.1, 1);
+  s5.calculateBLTCoefficients(slider5, 126, 1, 1);
+  s6.calculateBLTCoefficients(slider6, 200, 1, 1);
+  s7.calculateBLTCoefficients(slider7, 317, 1, 1);
+  s8.calculateBLTCoefficients(slider8, 502, 1, 1);
+  s9.calculateBLTCoefficients(slider9, 796, 0.9, 1);
+  s10.calculateBLTCoefficients(slider10, 1260, 0.8, 1);
+  s11.calculateBLTCoefficients(slider11, 2000, 0.8, 1);
+  s12.calculateBLTCoefficients(slider12, 3170, 0.7, 1);
+  s13.calculateBLTCoefficients(slider13, 5020, 1, 1);
+  s14.calculateBLTCoefficients(slider14, 7960, 0.9, 1);
+  s15.calculateBLTCoefficients(slider15, 12600, 0.6, 1);
+  s16.calculateBLTCoefficients(slider16, 20000, 0.5, 1);
+
+  //#####-PASS-FILTERS-####################################
+  //for each slider recalculate coefficients for frequency
+  
+  //#####-HPF-#############################################
+  slider17 != 0 ? (
+    slider17 == 1 ? (s17.freq = 12);
+    slider17 == 2 ? (s17.freq = 18);
+    slider17 == 3 ? (s17.freq = 24);
+    slider17 == 4 ? (s17.freq = 30);
+    slider17 == 5 ? (s17.freq = 36);
+    slider17 == 6 ? (s17.freq = 43);
+    slider17 == 7 ? (s17.freq = 54);
+    slider17 == 8 ? (s17.freq = 60);
+    slider17 == 9 ? (s17.freq = 80);
+    slider17 == 10 ? (s17.freq = 100);
+    
+    s17.calculateBLTCoefficients(0, s17.freq, 1, 2);
+  );
+  
+  //#####-LPF-#############################################
+  slider18 != 0 ? (
+    slider18 == 1 ? (s18.freq = 19000);
+    slider18 == 2 ? (s18.freq = 16000);
+    slider18 == 3 ? (s18.freq = 12600);
+    slider18 == 4 ? (s18.freq = 11100);
+    slider18 == 5 ? (s18.freq = 9000);
+    slider18 == 6 ? (s18.freq = 7500);
+    slider18 == 7 ? (s18.freq = 6000);
+    slider18 == 8 ? (s18.freq = 5000);
+    
+    s18.calculateBLTCoefficients(0, s18.freq, 1, 3);
+  );
+  
+  //#####-MAKE-UP GAIN-####################################
+  makeUpGain = 10^(slider19/20);
+);
+//#####################################################################################################################
+
+//#####-PARAMETERS-####################################################################################################
+//setup for UI (free up space, so glitches are gone)
+freemem = ui_setup(8192);
+
+//init effect variables
+makeUpGain = 0;
+//#####################################################################################################################
+
+//#####-BLOCK-#########################################################################################################
+@block
+toUpdate ? onSliderChange();
+//#####################################################################################################################
+
+//#####-SAMPLE-########################################################################################################
+@sample
+//step 1:
+//apply Bilinear Transform (BLT) equation implementation for each sample
+//equalizer (peakingEQ)
+equalizerActive != 0 ? (
+  slider1 != 0 ? ( s1.applyBilinearTransformFunctionOnSample(); );
+  slider2 != 0 ? ( s2.applyBilinearTransformFunctionOnSample(); );
+  slider3 != 0 ? ( s3.applyBilinearTransformFunctionOnSample(); );
+  slider4 != 0 ? ( s4.applyBilinearTransformFunctionOnSample(); );
+  slider5 != 0 ? ( s5.applyBilinearTransformFunctionOnSample(); );
+  slider6 != 0 ? ( s6.applyBilinearTransformFunctionOnSample(); );
+  slider7 != 0 ? ( s7.applyBilinearTransformFunctionOnSample(); );
+  slider8 != 0 ? ( s8.applyBilinearTransformFunctionOnSample(); );
+  slider9 != 0 ? ( s9.applyBilinearTransformFunctionOnSample(); );
+  slider10 != 0 ? ( s10.applyBilinearTransformFunctionOnSample(); );
+  slider11 != 0 ? ( s11.applyBilinearTransformFunctionOnSample(); );
+  slider12 != 0 ? ( s12.applyBilinearTransformFunctionOnSample(); );
+  slider13 != 0 ? ( s13.applyBilinearTransformFunctionOnSample(); );
+  slider14 != 0 ? ( s14.applyBilinearTransformFunctionOnSample(); );
+  slider15 != 0 ? ( s15.applyBilinearTransformFunctionOnSample(); );
+  slider16 != 0 ? ( s16.applyBilinearTransformFunctionOnSample(); );
+);
+
+//hpf and lpf
+filtersActive != 0 ? (
+  slider17 != 0 ? ( s17.applyBilinearTransformFunctionOnSample(); );
+  slider18 != 0 ? ( s18.applyBilinearTransformFunctionOnSample(); );
+);
+
+//step2:
+//apply make-up gain
+spl0 *= makeUpGain;
+spl1 *= makeUpGain;
+//#####################################################################################################################
+
+//#####-GUI-###########################################################################################################
+@gfx 800 700
+drawGUI();
+onSliderChange() ? toUpdate = 1;
+//#####################################################################################################################

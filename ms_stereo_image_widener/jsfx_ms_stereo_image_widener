@@ -1,0 +1,142 @@
+//#####-INFO-##########################################################################################################
+//author: Maciej Budzowski
+//plugin behavior based on "The Haas Effect" concept and algorithm from source book (for panning and delay implementation)
+//
+//sources:
+//  books:
+//    - "Hack Audio An Introduction to Computer Programming and Digital Signal Processing in MATLAB" by Eric Tarr (chapter 9 and chapter 11)
+//#####################################################################################################################
+
+desc:MASTERING_SUITE - STEREO IMAGE WIDENER (JSFX)
+
+//#####-SETUP-#########################################################################################################
+//import ui library
+import ../jsfx-ui-lib/ui-lib.jsfx-inc
+import ../jsfx-ui-lib/ui-lib-compat.jsfx-inc
+import jsfx_ms_stereo_image_widener_ui.jsfx-inc
+
+//in/out setup
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output 
+
+//effect parameters controls
+slider1:0<0,5000,50>-HPF (Hz)
+slider2:0<0,1,1{0,1}>-Flip (on/off)
+slider3:100<0,100,1>-Width (%)
+slider4:100<0,100,1>-Dry/Wet Mix (%)
+//#####################################################################################################################
+
+//#####-INIT-##########################################################################################################
+@init
+//#####-FUNCTIONS-#####################################################################################################
+function calculateBLTCoefficients(freq, q) local(A, w0, alpha) (
+  //calculate coefficients for "HPF" filter type
+  w0 = 2 * $pi * (freq / srate);
+  alpha = sin(w0) / (2 * q);
+  
+  this.b0 = (1 + cos(w0))/2;
+  this.b1 = - (1 + cos(w0));
+  this.b2 = (1 + cos(w0))/2;
+  this.a0 = 1 + alpha;
+  this.a1 = -2 * cos(w0);
+  this.a2 = 1 - alpha;
+);
+
+function applyBilinearTransformFunctionOnSample() local(orgR, orgL) (
+  orgR = spl0;
+  spl0 = (this.b0/this.a0) * spl0 + (this.b1/this.a0) * this.XL1 + (this.b2/this.a0) * this.XL2 - (this.a1/this.a0) * this.YL1 - (this.a2/this.a0) * this.YL2;
+  this.XL2 = this.XL1;
+  this.XL1 = orgR;
+  this.YL2 = this.YL1;
+  this.YL1 = spl0;
+  
+  orgL = spl1;
+  spl1 = (this.b0/this.a0) * spl1 + (this.b1/this.a0) * this.XR1 + (this.b2/this.a0) * this.XR2 - (this.a1/this.a0) * this.YR1 - (this.a2/this.a0) * this.YR2;
+  this.XR2 = this.XR1;
+  this.XR1 = orgL;
+  this.YR2 = this.YR1;
+  this.YR1 = spl1;
+);
+
+function onSliderChange() (
+  //actions performed on every change of any slider (data update)
+  toUpdate = 0;
+
+  //assign controls values to variables
+  delayTime = 0.25 * slider3;
+  delayLeft = (delayTime * srate) / 1000;
+  delayRight = (0.5 * delayTime * srate) / 1000;
+  dryWetMix = slider4/100;
+  
+  //recalculate coefficients for hpf frequency
+  hpf.calculateBLTCoefficients(slider1, 1);
+
+  //assign boolean value
+  flip = slider2;
+);
+
+//#####-PARAMETERS-####################################################################################################
+//setup for UI (free up space, so glitches are gone)
+freemem = ui_setup(8192);
+
+//init effect variables
+delayPositionLeft = 0;
+delayPositionRight = 2048;
+//#####################################################################################################################
+
+//#####-BLOCK-#########################################################################################################
+@block
+toUpdate ? onSliderChange();
+//#####################################################################################################################
+
+//#####-SAMPLE-########################################################################################################
+@sample
+//step 1:
+//apply delay algorithm with other delay-time for each channel
+orgL = spl0;
+orgR = spl1;
+
+delayedLeft = delayPositionLeft * 2;
+outputLeft = delayedLeft[0];
+delayedLeft[0] = orgL;
+
+delayedRight = delayPositionRight * 2;
+outputRight = delayedRight[0];
+delayedRight[0] = orgR;
+
+(delayPositionLeft += 1) >= delayLeft ? (
+  delayPositionLeft = 0;
+);
+
+(delayPositionRight += 1) >= delayRight + 2048 ? (
+  delayPositionRight = 2048;
+);
+
+//step 2:
+//flip sides (left/right)
+flip == 1 ? (
+  spl0 = outputLeft * dryWetMix ;
+  spl1 = outputRight * dryWetMix  * 0.75;
+) : (
+  spl1 = outputLeft * dryWetMix;
+  spl0 = outputRight * dryWetMix * 0.75;
+);
+
+//step 3:
+//hpf - apply Bilinear Transform (BLT) equation implementation for each sample
+slider1 != 0 ? ( hpf.applyBilinearTransformFunctionOnSample(); );
+
+//step 4:
+//apply proper dry/wet mix of signals
+//wet part
+spl0 += orgL * (1 - dryWetMix);
+spl1 += orgR * (1 - dryWetMix);
+//#####################################################################################################################
+
+//#####-GUI-###########################################################################################################
+@gfx 390 455
+drawGUI();
+onSliderChange() ? toUpdate = 1;
+//#####################################################################################################################

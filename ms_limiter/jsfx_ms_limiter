@@ -1,0 +1,95 @@
+//#####-INFO-##########################################################################################################
+//author: Maciej Budzowski
+//plugin behavior based on algorithm from source book
+//
+//sources:
+//  books:
+//    - "DAFX Digital Audio Effects, 2nd Edition" by Udo Zölzer (chapter 4.2.1, script "limiter.m", page 109)
+//#####################################################################################################################
+
+desc:MASTERING_SUITE - BRICKWALL LIMITER (JSFX)
+
+//#####-SETUP-#########################################################################################################
+//import ui library
+import ../jsfx-ui-lib/ui-lib.jsfx-inc
+import ../jsfx-ui-lib/ui-lib-compat.jsfx-inc
+import jsfx_ms_limiter_ui.jsfx-inc
+
+//in/out setup
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output 
+
+//effect parameters controls
+slider1:0<-60,0,0.1>-Threshold (dB)
+slider2:0<-24,0,0.1>-Ceiling (dB)
+//#####################################################################################################################
+
+//#####-INIT-##########################################################################################################
+@init
+
+//#####-FUNCTIONS-#####################################################################################################
+function onSliderChange() (
+  //actions performed on every change of any slider (data update)
+  toUpdate = 0;
+
+  //assign controls values to variables
+  threshold = 10^(slider1/20);
+  ceiling = exp(slider2/8.65617025);
+  volume = ceiling / threshold;
+);
+
+//#####-PARAMETERS-####################################################################################################
+//setup for UI (free up space, so glitches are gone)
+freemem = ui_setup(8192);
+
+//init effect variables
+attackTime = 0.25;
+releaseTime = 0.5;
+xPeak = 0;
+gain = 1;
+//#####################################################################################################################
+
+//#####-BLOCK-#########################################################################################################
+@block
+toUpdate ? onSliderChange();
+//#####################################################################################################################
+
+//#####-SAMPLE-########################################################################################################
+@sample
+//step 1:
+//apply limiter algorithm
+inputSample = max(abs(spl0), abs(spl1));
+
+inputSample > xPeak ? (
+  coefficient = attackTime;
+):(
+  coefficient = releaseTime;
+);
+
+xPeak = (1 - coefficient) * xPeak + coefficient * inputSample;
+peakMeasure = min(1, threshold/xPeak);
+
+peakMeasure < gain ? (
+  coefficient = attackTime;
+):(
+  coefficient = releaseTime;
+);
+
+gain = (1 - coefficient) * gain + coefficient * peakMeasure;
+
+spl0 *= gain * volume;
+spl1 *= gain * volume;
+
+//step 2:
+//limit gain to "ceiling" value
+spl0 = max(min(spl0, ceiling), -ceiling);
+spl1 = max(min(spl1, ceiling), -ceiling);
+//#####################################################################################################################
+
+//#####-GUI-###########################################################################################################
+@gfx 390 455
+drawGUI();
+onSliderChange() ? toUpdate = 1;
+//#####################################################################################################################

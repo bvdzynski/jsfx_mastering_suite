@@ -1,0 +1,63 @@
+//#####-INFO-##########################################################################################################
+//author: Maciej Budzowski
+//gui interface for jsfx_ms_stereo_image_widener (MASTERING_SUITE - STEREO IMAGE WIDENER (JSFX))
+//
+//used library: UIs for REAPER's JS effects by Geraint Luff (https://github.com/geraintluff/jsfx-ui-lib)
+//#####################################################################################################################
+
+@init
+function drawGUI()(
+    //####################-INIT-###################################################################
+    control_start("main", "black");
+    //#############################################################################################
+
+    //####################-TOP BARS-###############################################################
+    ui_set_rect(10, 10, 200, 40);
+    control_navbar("JSFX MASTERING SUITE");
+    ui_set_rect(220, 10, 200, 40);
+    control_navbar("STEREO IMAGE WIDENER");
+    //#############################################################################################
+
+    //####################-"STEREO IMAGE WIDENER" GROUP-#####################################################
+    ui_set_rect(5, 55, 420, 400);
+    control_group("STEREO IMAGE WIDENER");
+
+    ui_split_topratio(1/6);
+        ui_split_leftratio(1/3);
+            ui_split_next();
+            ui_split_top(30);
+                ui_text("FLIP SIDES");
+            ui_pop();
+            slider2 = control_switch(slider2);
+            ui_split_next();
+        ui_pop();  
+    ui_pop();
+    ui_split_top(10);
+    ui_pop();
+    ui_split_leftratio(1/3);
+        ui_split_top(30);
+            ui_text("HPF");
+        ui_pop();
+        ui_split_bottom(30);
+            ui_textnumber(slider1, "%.f (Hz)");
+        ui_pop();
+        slider1 = control_slider_bottom(slider1, 0, 5000, 2, 0);
+        ui_split_next();
+        ui_split_top(30);
+            ui_text("WIDTH");
+        ui_pop();
+        ui_split_bottom(30);
+            ui_textnumber(slider3, "%.f (%%)");
+        ui_pop();
+        slider3 = control_slider_bottom(slider3, 0, 100, 0, 1);
+        ui_split_next();
+        ui_split_top(30);
+            ui_text("DRY/WET MIX");
+        ui_pop();
+        ui_split_bottom(30);
+            ui_textnumber(slider4, "%.1f (%%)");
+        ui_pop();
+        slider4 = control_slider_bottom(slider4, 0, 100, 0, 1);
+    ui_pop();
+    //#############################################################################################
+);

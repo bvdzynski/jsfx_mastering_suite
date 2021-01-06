@@ -1,0 +1,108 @@
+//#####-INFO-##########################################################################################################
+//author: Maciej Budzowski
+//plugin behavior based on algorithm from source book
+//
+//sources:
+//  books:
+//    - "Hack Audio: An Introduction to Computer Programming and Digital Signal Processing in MATLAB" by Eric Tarr (script "basicComp.m", page 425)
+//#####################################################################################################################
+
+desc:MASTERING_SUITE - DYNAMICS BUSS COMPRESSOR (JSFX)
+
+//#####-SETUP-#########################################################################################################
+//import ui library
+import ../jsfx-ui-lib/ui-lib.jsfx-inc
+import ../jsfx-ui-lib/ui-lib-compat.jsfx-inc
+import jsfx_ms_bus_comp_ui.jsfx-inc
+
+//in/out setup
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output 
+
+//effect parameters controls
+slider1:0<-24,24,0.1>-Input Gain (dB)
+slider2:0<-60,0,0.1>-Threshold (dB)
+slider3:0<0,3,1{2,4,6,8,10,12,20}>-Ratio
+slider4:0<-24,24,0.1>-Make-Up Gain (dB)
+slider5:100<0,100,0.1>-Mix (%)
+//#####################################################################################################################
+
+//#####-INIT-##########################################################################################################
+@init
+//#####-FUNCTIONS-#####################################################################################################
+function onSliderChange() (
+  //actions performed on every change of any slider (data update)
+  toUpdate = 0;
+
+  //assign controls values to variables
+  inputGain = 10^(slider1/20);
+  threshold = 10^(slider2/20);
+
+  slider3 == 0 ? (ratio = 2);
+  slider3 == 1 ? (ratio = 4);
+  slider3 == 2 ? (ratio = 6);
+  slider3 == 3 ? (ratio = 8);
+  slider3 == 4 ? (ratio = 10);
+  slider3 == 5 ? (ratio = 12);
+  slider3 == 6 ? (ratio = 20);
+
+  makeUpGain = 10^(slider4/20);
+  dryWetMix = slider5 / 100;
+);
+//#####################################################################################################################
+
+//#####-PARAMETERS-####################################################################################################
+//setup for UI (free up space, so glitches are gone)
+freemem = ui_setup(8192);
+
+//init effect variables
+makeUpGain = 0;
+//#####################################################################################################################
+
+//#####-BLOCK-#########################################################################################################
+@block
+toUpdate ? onSliderChange();
+//#####################################################################################################################
+
+//#####-SAMPLE-########################################################################################################
+@sample
+//step 1:
+//apply compressor algorithm
+orgL = spl0;
+orgR = spl1;
+
+//input gain
+spl0 *= inputGain;
+spl1 *= inputGain;
+
+maxSample = max(abs(spl0), abs(spl1));
+
+inputSample = sqrt(max(0, maxSample));
+
+x = max(0, 20 * log10(inputSample/threshold));
+
+gainReduction = - x * ((ratio - 1) / ratio);
+gainReductionVolume = 10^(gainReduction/20);
+
+//step 2:
+//apply proper dry/wet mix of signals
+//wet part
+spl0 *= gainReductionVolume * dryWetMix;
+spl1 *= gainReductionVolume * dryWetMix;  
+
+//dry part
+spl0 += orgL * (1 - dryWetMix);
+spl1 += orgR * (1 - dryWetMix);
+
+//step 3:
+//apply make-up gain
+spl0 *= makeUpGain;
+spl1 *= makeUpGain;
+
+//#####-GUI-###########################################################################################################
+@gfx 800 455
+drawGUI();
+onSliderChange() ? toUpdate = 1;
+//#####################################################################################################################

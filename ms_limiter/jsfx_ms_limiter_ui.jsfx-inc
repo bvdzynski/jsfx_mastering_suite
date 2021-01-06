@@ -1,0 +1,42 @@
+//#####-INFO-##########################################################################################################
+//author: Maciej Budzowski
+//gui interface for jsfx_ms_bus_comp (MASTERING_SUITE - BRICKWALL LIMITER (JSFX))
+//
+//used library: UIs for REAPER's JS effects by Geraint Luff (https://github.com/geraintluff/jsfx-ui-lib)
+//#####################################################################################################################
+
+@init
+function drawGUI()(
+    //####################-INIT-###################################################################
+    control_start("main", "black");
+    //#############################################################################################
+
+    //####################-TOP BARS-###############################################################
+    ui_set_rect(10, 10, 200, 40);
+    control_navbar("JSFX MASTERING SUITE");
+    ui_set_rect(220, 10, 200, 40);
+    control_navbar("BRICKWALL LIMITER");
+    //#############################################################################################
+
+    //####################-"LIMITER" GROUP-#####################################################
+    ui_set_rect(5, 55, 420, 400);
+    control_group("LIMITER");
+
+    ui_split_leftratio(1/2);
+        ui_split_top(30);
+            ui_text("THRESHOLD");
+        ui_pop();
+        ui_split_bottom(30);
+            ui_textnumber(slider1, "%.2f (dB)");
+        ui_pop();
+        slider1 = control_slider_bottom(slider1, -60, 0, 0, 0);
+        ui_split_next();
+        ui_split_top(30);
+            ui_text("CEILING");
+        ui_pop();
+        ui_split_bottom(30);
+            ui_textnumber(slider2, "%.1f (dB)");
+        ui_pop();
+        slider2 = control_slider_bottom(slider2, -24, 0, 0, 0);
+    ui_pop();
+);

@@ -1,0 +1,121 @@
+//#####-INFO-##########################################################################################################
+//author: Maciej Budzowski
+//gui interface for jsfx_ms_bus_comp (MASTERING_SUITE - DYNAMICS BUSS COMPRESSOR (JSFX))
+//
+//used library: UIs for REAPER's JS effects by Geraint Luff (https://github.com/geraintluff/jsfx-ui-lib)
+//#####################################################################################################################
+
+@init
+function drawGUI()(
+    //####################-INIT-###################################################################
+    control_start("main", "black");
+    //#############################################################################################
+
+    //####################-TOP BARS-###############################################################
+    ui_set_rect(10, 10, 200, 40);
+    control_navbar("JSFX MASTERING SUITE");
+    ui_set_rect(220, 10, 570, 40);
+    control_navbar("DYNAMICS BUSS COMPRESSOR");
+    //#############################################################################################
+
+    //####################-"INPUT GAIN" GROUP-#####################################################
+    ui_set_rect(5, 55, 200, 400);
+    control_group("INPUT GAIN");
+
+    ui_split_leftratio(1);
+        ui_split_bottom(20);
+            ui_textnumber(slider1, "%.2f (dB)");
+        ui_pop();
+        slider1 = control_dial(slider1, -24, 24, 0, 0);
+    ui_pop();
+    //#############################################################################################
+
+    //####################-"COMPRESSOR" GROUP-#####################################################
+    ui_set_rect(205, 55, 200, 400);
+    control_group("COMPRESSOR");
+
+    ui_split_leftratio(1/2);
+        ui_split_top(30);
+            ui_text("THRESHOLD");
+        ui_pop();
+        ui_split_bottom(30);
+            ui_textnumber(slider2, "%.2f (dB)");
+        ui_pop();
+        slider2 = control_slider_bottom(slider2, -60, 0, 0, 0);
+        ui_split_next();
+        ui_split_topratio(1/8);
+            ui_split_top(30);
+                ui_text("RATIO");
+            ui_pop();
+            ui_split_next();
+            ui_split_left(40);
+            slider3 = control_radio(slider3, 0);
+            ui_split_next();
+                ui_text("2:1");    
+            ui_pop();
+            ui_split_next();
+            ui_split_left(40);
+            slider3 = control_radio(slider3, 1);
+            ui_split_next();
+                ui_text("4:1");
+            ui_pop();
+            ui_split_next();
+            ui_split_left(40);
+            slider3 = control_radio(slider3, 2);
+            ui_split_next();
+                ui_text("6:1");
+            ui_pop();
+            ui_split_next();
+            ui_split_left(40);
+            slider3 = control_radio(slider3, 3);
+            ui_split_next();
+                ui_text("8:1");
+            ui_pop();
+            ui_split_next();
+            ui_split_left(40);
+            slider3 = control_radio(slider3, 4);
+            ui_split_next();
+                ui_text("10:1");
+            ui_pop();
+            ui_split_next();
+            ui_split_left(40);
+            slider3 = control_radio(slider3, 5);
+            ui_split_next();
+                ui_text("12:1");
+            ui_pop();
+            ui_split_next();
+            ui_split_left(40);
+            slider3 = control_radio(slider3, 6);
+            ui_split_next();
+                ui_text("20:1");
+            ui_pop();
+        ui_pop();
+    ui_pop();
+    //#############################################################################################
+
+    //####################-"DRY/WET MIX" GROUP-####################################################
+    ui_set_rect(405, 55, 200, 400);
+    control_group("DRY/WET MIX");
+
+    //control dial
+    ui_split_leftratio(1);
+        ui_split_bottom(20);
+            ui_textnumber(slider5, "WET: %.f (%%)");
+        ui_pop();
+        slider5 = control_dial(slider5, 0, 100, 0, 100);
+    ui_pop();
+    //#############################################################################################
+
+    //####################-"MAKE-UP GAIN"-#########################################################
+    ui_set_rect(605, 55, 190, 400);
+    control_group("MAKE-UP GAIN");
+
+    //control dial
+    ui_split_leftratio(1);
+        ui_split_bottom(20);
+            ui_textnumber(slider4, "%.2f (dB)");
+        ui_pop();
+        slider4 = control_dial(slider4, -24, 24, 0, 0);
+    ui_pop();
+    //#############################################################################################
+);

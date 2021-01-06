@@ -1,0 +1,99 @@
+//#####-INFO-##########################################################################################################
+//author: Maciej Budzowski
+//plugin behavior based on algorithm from source book
+//tube simulation by using asymmetrical clipping
+//
+//sources:
+//  books:
+//    - "DAFX Digital Audio Effects, 2nd Edition" by Udo Zölzer (chapter 4.3.1, script "tube.m", page 122)
+//#####################################################################################################################
+
+desc:MASTERING_SUITE - SATURATOR (TUBE SIMULATION) (JSFX)
+
+//#####-SETUP-#########################################################################################################
+//import ui library
+import ../jsfx-ui-lib/ui-lib.jsfx-inc
+import ../jsfx-ui-lib/ui-lib-compat.jsfx-inc
+import jsfx_ms_saturator_ui.jsfx-inc
+
+//in/out setup
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output 
+
+//effect parameters controls
+slider1:6<0.1,12,0.1>-Saturation (%)
+slider2:50<0,100,0.1>-Dry/Wet Mix (%)
+slider3:0<-24,24,0.1>-Make-Up Gain (dB)
+//#####################################################################################################################
+
+//#####-INIT-##########################################################################################################
+@init
+//#####-FUNCTIONS-#####################################################################################################
+function onSliderChange() (
+  //actions performed on every change of any slider (data update)
+  toUpdate = 0;
+
+  //assign controls values to variables
+  saturation = slider1;
+  dryWetMix = slider2/100;
+  makeUpGain = 10^(slider3/20);
+);
+
+//#####-PARAMETERS-####################################################################################################
+//setup for UI (free up space, so glitches are gone)
+freemem = ui_setup(8192);
+
+//init effect variables
+makeUpGain = 0;
+coeffQ = -0.2;
+dist = 8;
+//#####################################################################################################################
+
+//#####-BLOCK-#########################################################################################################
+@block
+toUpdate ? onSliderChange();
+//#####################################################################################################################
+
+//#####-SAMPLE-########################################################################################################
+@sample
+//step 1:
+//apply saturator algorithm
+orgL = spl0;
+orgR = spl1;
+
+x = spl0;
+q = spl0 * saturation / abs(x);
+
+outputSample = 1;
+
+coeffQ != x ? (
+ outputSample = ((q - coeffQ) / (1 - exp((-dist) * (q - coeffQ)))) + (coeffQ / (1 - exp(dist * coeffQ)));
+);
+
+coeff == x ? (
+  outputSample = (1 / dist)  + (coeffQ / (1 - exp(dist * coeffQ)));
+);
+
+//step 2:
+//apply proper dry/wet mix of signals
+//wet part
+spl0 *= outputSample * dryWetMix;
+spl1 *= outputSample * dryWetMix; 
+
+//dry part
+spl0 += orgL * (1 - dryWetMix);
+spl1 += orgR * (1 - dryWetMix);
+
+//step 3:
+//apply make-up gain
+spl0 *= makeUpGain;
+spl1 *= makeUpGain;
+//#####################################################################################################################
+
+//#####-GUI-###########################################################################################################
+@gfx 470 455
+drawGUI();
+onSliderChange() ? toUpdate = 1;
+//#####################################################################################################################

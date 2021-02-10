@@ -15,6 +15,10 @@ _See the source files for details._
 | [![saturator](x)](x) | Saturator (Tube Simulator) |
 | [![st_img_w](x)](x) | Stereo Image Widener |
 
+## GUI
+
+Plugins are using [Geraint's Luff GUI Library](https://github.com/geraintluff/jsfx-ui-lib) as UI.
+
 ## Installation
 
 Copy [jsfx_mastering_suite](x) folder to /Effects in REAPER resources folder and re-scan plugins library in REAPER.

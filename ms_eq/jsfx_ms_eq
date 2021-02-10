@@ -61,7 +61,7 @@ slider21:filtersActive=1<0,1,1{Disabled,Enabled}>-HPF/LPF section active (on/off
 //#####-INIT-##########################################################################################################
 @init
 //#####-FUNCTIONS-#####################################################################################################
-function calculateBLTCoefficients(gain, freq, q, type) local(A, w0, alpha) (
+function calculateCoefficientsValues(gain, freq, q, type) local(A, w0, alpha) (
   //calculate coefficients for "peakingEQ" filter type
   type == 1 ? (
     A = 10^(gain/40);
@@ -101,7 +101,7 @@ function calculateBLTCoefficients(gain, freq, q, type) local(A, w0, alpha) (
   );
 );
 
-function applyBilinearTransformFunctionOnSample() local(orgL, orgR) (
+function applyFilterOnSample() local(orgL, orgR) (
   orgL = spl0;
   spl0 = (this.b0/this.a0) * spl0 + (this.b1/this.a0) * this.XL1 + (this.b2/this.a0) * this.XL2 - (this.a1/this.a0) * this.YL1 - (this.a2/this.a0) * this.YL2;
   this.XL2 = this.XL1;
@@ -125,22 +125,22 @@ function onSliderChange() (
 
   //#####-16-BAND-EQUALIZER-###############################
   //for each slider recalculate coefficients for frequency
-  s1.calculateBLTCoefficients(slider1, 20.0, 0.85, 1);
-  s2.calculateBLTCoefficients(slider2, 31.7, 1, 1);
-  s3.calculateBLTCoefficients(slider3, 50.2, 0.1, 1);
-  s4.calculateBLTCoefficients(slider4, 79.6, 0.1, 1);
-  s5.calculateBLTCoefficients(slider5, 126, 1, 1);
-  s6.calculateBLTCoefficients(slider6, 200, 1, 1);
-  s7.calculateBLTCoefficients(slider7, 317, 1, 1);
-  s8.calculateBLTCoefficients(slider8, 502, 1, 1);
-  s9.calculateBLTCoefficients(slider9, 796, 0.9, 1);
-  s10.calculateBLTCoefficients(slider10, 1260, 0.8, 1);
-  s11.calculateBLTCoefficients(slider11, 2000, 0.8, 1);
-  s12.calculateBLTCoefficients(slider12, 3170, 0.7, 1);
-  s13.calculateBLTCoefficients(slider13, 5020, 1, 1);
-  s14.calculateBLTCoefficients(slider14, 7960, 0.9, 1);
-  s15.calculateBLTCoefficients(slider15, 12600, 0.6, 1);
-  s16.calculateBLTCoefficients(slider16, 20000, 0.5, 1);
+  s1.calculateCoefficientsValues(slider1, 20.0, 0.85, 1);
+  s2.calculateCoefficientsValues(slider2, 31.7, 1, 1);
+  s3.calculateCoefficientsValues(slider3, 50.2, 1, 1);
+  s4.calculateCoefficientsValues(slider4, 79.6, 1, 1);
+  s5.calculateCoefficientsValues(slider5, 126, 1, 1);
+  s6.calculateCoefficientsValues(slider6, 200, 1, 1);
+  s7.calculateCoefficientsValues(slider7, 317, 1, 1);
+  s8.calculateCoefficientsValues(slider8, 502, 1, 1);
+  s9.calculateCoefficientsValues(slider9, 796, 0.9, 1);
+  s10.calculateCoefficientsValues(slider10, 1260, 0.8, 1);
+  s11.calculateCoefficientsValues(slider11, 2000, 0.8, 1);
+  s12.calculateCoefficientsValues(slider12, 3170, 0.7, 1);
+  s13.calculateCoefficientsValues(slider13, 5020, 1, 1);
+  s14.calculateCoefficientsValues(slider14, 7960, 0.9, 1);
+  s15.calculateCoefficientsValues(slider15, 12600, 0.6, 1);
+  s16.calculateCoefficientsValues(slider16, 20000, 0.5, 1);
 
   //#####-PASS-FILTERS-####################################
   //for each slider recalculate coefficients for frequency
@@ -158,7 +158,7 @@ function onSliderChange() (
     slider17 == 9 ? (s17.freq = 80);
     slider17 == 10 ? (s17.freq = 100);
     
-    s17.calculateBLTCoefficients(0, s17.freq, 1, 2);
+    s17.calculateCoefficientsValues(0, s17.freq, 1, 2);
   );
   
   //#####-LPF-#############################################
@@ -172,7 +172,7 @@ function onSliderChange() (
     slider18 == 7 ? (s18.freq = 6000);
     slider18 == 8 ? (s18.freq = 5000);
     
-    s18.calculateBLTCoefficients(0, s18.freq, 1, 3);
+    s18.calculateCoefficientsValues(0, s18.freq, 1, 3);
   );
   
   //#####-MAKE-UP GAIN-####################################
@@ -196,31 +196,31 @@ toUpdate ? onSliderChange();
 //#####-SAMPLE-########################################################################################################
 @sample
 //step 1:
-//apply Bilinear Transform (BLT) equation implementation for each sample
+//apply filter implementation for each sample
 //equalizer (peakingEQ)
 equalizerActive != 0 ? (
-  slider1 != 0 ? ( s1.applyBilinearTransformFunctionOnSample(); );
-  slider2 != 0 ? ( s2.applyBilinearTransformFunctionOnSample(); );
-  slider3 != 0 ? ( s3.applyBilinearTransformFunctionOnSample(); );
-  slider4 != 0 ? ( s4.applyBilinearTransformFunctionOnSample(); );
-  slider5 != 0 ? ( s5.applyBilinearTransformFunctionOnSample(); );
-  slider6 != 0 ? ( s6.applyBilinearTransformFunctionOnSample(); );
-  slider7 != 0 ? ( s7.applyBilinearTransformFunctionOnSample(); );
-  slider8 != 0 ? ( s8.applyBilinearTransformFunctionOnSample(); );
-  slider9 != 0 ? ( s9.applyBilinearTransformFunctionOnSample(); );
-  slider10 != 0 ? ( s10.applyBilinearTransformFunctionOnSample(); );
-  slider11 != 0 ? ( s11.applyBilinearTransformFunctionOnSample(); );
-  slider12 != 0 ? ( s12.applyBilinearTransformFunctionOnSample(); );
-  slider13 != 0 ? ( s13.applyBilinearTransformFunctionOnSample(); );
-  slider14 != 0 ? ( s14.applyBilinearTransformFunctionOnSample(); );
-  slider15 != 0 ? ( s15.applyBilinearTransformFunctionOnSample(); );
-  slider16 != 0 ? ( s16.applyBilinearTransformFunctionOnSample(); );
+  slider1 != 0 ? ( s1.applyFilterOnSample(); );
+  slider2 != 0 ? ( s2.applyFilterOnSample(); );
+  slider3 != 0 ? ( s3.applyFilterOnSample(); );
+  slider4 != 0 ? ( s4.applyFilterOnSample(); );
+  slider5 != 0 ? ( s5.applyFilterOnSample(); );
+  slider6 != 0 ? ( s6.applyFilterOnSample(); );
+  slider7 != 0 ? ( s7.applyFilterOnSample(); );
+  slider8 != 0 ? ( s8.applyFilterOnSample(); );
+  slider9 != 0 ? ( s9.applyFilterOnSample(); );
+  slider10 != 0 ? ( s10.applyFilterOnSample(); );
+  slider11 != 0 ? ( s11.applyFilterOnSample(); );
+  slider12 != 0 ? ( s12.applyFilterOnSample(); );
+  slider13 != 0 ? ( s13.applyFilterOnSample(); );
+  slider14 != 0 ? ( s14.applyFilterOnSample(); );
+  slider15 != 0 ? ( s15.applyFilterOnSample(); );
+  slider16 != 0 ? ( s16.applyFilterOnSample(); );
 );
 
 //hpf and lpf
 filtersActive != 0 ? (
-  slider17 != 0 ? ( s17.applyBilinearTransformFunctionOnSample(); );
-  slider18 != 0 ? ( s18.applyBilinearTransformFunctionOnSample(); );
+  slider17 != 0 ? ( s17.applyFilterOnSample(); );
+  slider18 != 0 ? ( s18.applyFilterOnSample(); );
 );
 
 //step2:

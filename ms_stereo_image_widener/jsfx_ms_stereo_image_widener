@@ -31,7 +31,7 @@ slider4:100<0,100,1>-Dry/Wet Mix (%)
 //#####-INIT-##########################################################################################################
 @init
 //#####-FUNCTIONS-#####################################################################################################
-function calculateBLTCoefficients(freq, q) local(A, w0, alpha) (
+function calculateCoefficientsValues(freq, q) local(A, w0, alpha) (
   //calculate coefficients for "HPF" filter type
   w0 = 2 * $pi * (freq / srate);
   alpha = sin(w0) / (2 * q);
@@ -44,7 +44,7 @@ function calculateBLTCoefficients(freq, q) local(A, w0, alpha) (
   this.a2 = 1 - alpha;
 );
 
-function applyBilinearTransformFunctionOnSample() local(orgR, orgL) (
+function applyFilterOnSample() local(orgR, orgL) (
   orgR = spl0;
   spl0 = (this.b0/this.a0) * spl0 + (this.b1/this.a0) * this.XL1 + (this.b2/this.a0) * this.XL2 - (this.a1/this.a0) * this.YL1 - (this.a2/this.a0) * this.YL2;
   this.XL2 = this.XL1;
@@ -71,7 +71,7 @@ function onSliderChange() (
   dryWetMix = slider4/100;
   
   //recalculate coefficients for hpf frequency
-  hpf.calculateBLTCoefficients(slider1, 1);
+  hpf.calculateCoefficientsValues(slider1, 1);
 
   //assign boolean value
   flip = slider2;
@@ -125,8 +125,8 @@ flip == 1 ? (
 );
 
 //step 3:
-//hpf - apply Bilinear Transform (BLT) equation implementation for each sample
-slider1 != 0 ? ( hpf.applyBilinearTransformFunctionOnSample(); );
+//hpf - apply filter implementation for each sample
+slider1 != 0 ? ( hpf.applyFilterOnSample(); );
 
 //step 4:
 //apply proper dry/wet mix of signals

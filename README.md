@@ -9,11 +9,11 @@ _See the source files for details._
 
 | Screenshot | Plugin | 
 | ---------- | ------ | 
-| [![geq](x)](x) | 16-Band Graphic Equalizer |
-| [![bus_comp](x)](x) | Dynamics Buss Compresor |
-| [![brick_limit](x)](x) | Brickwall Limiter |
-| [![saturator](x)](x) | Saturator (Tube Simulator) |
-| [![st_img_w](x)](x) | Stereo Image Widener |
+| [![geq](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_eq.png)](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_eq.png) | 16-Band Graphic Equalizer |
+| [![bus_comp](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_buss_com.png)](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_buss_com.png) | Dynamics Buss Compresor |
+| [![brick_limit](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_limiter.png)](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_limiter.png) | Brickwall Limiter |
+| [![saturator](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_saturator.png)](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_saturator.png) | Saturator (Tube Simulator) |
+| [![st_img_w](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_stimgwid.png)](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_stimgwid.png) | Stereo Image Widener |
 
 ## GUI
 

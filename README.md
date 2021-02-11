@@ -5,6 +5,14 @@ Plugins are made for use in mastering stage of music production.
 
 _See the source files for details._
 
+## Used GUI Library
+
+Plugins are using [Geraint's Luff GUI Library](https://github.com/geraintluff/jsfx-ui-lib) as UI.
+
+## Installation
+
+Copy [jsfx_mastering_suite](x) folder to /Effects in REAPER resources folder and re-scan plugins library in REAPER.
+
 ## Effects
 
 | Screenshot | Plugin | 
@@ -14,11 +22,3 @@ _See the source files for details._
 | [![brick_limit](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_limiter.png)](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_limiter.png) | Brickwall Limiter |
 | [![saturator](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_saturator.png)](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_saturator.png) | Saturator (Tube Simulator) |
 | [![st_img_w](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_stimgwid.png)](https://raw.githubusercontent.com/bvdzynski/jsfx_mastering_suite/main/screenshots/sc_stimgwid.png) | Stereo Image Widener |
-
-## GUI
-
-Plugins are using [Geraint's Luff GUI Library](https://github.com/geraintluff/jsfx-ui-lib) as UI.
-
-## Installation
-
-Copy [jsfx_mastering_suite](x) folder to /Effects in REAPER resources folder and re-scan plugins library in REAPER.
